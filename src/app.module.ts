@@ -4,7 +4,7 @@ import {AppService} from './app.service';
 import {MongooseModule} from "@nestjs/mongoose";
 import {UsersModule} from "./users/user.module";
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import databaseConfig, {CONFIG_DATABASE} from "./users/config/database.config";
+import databaseConfig, {CONFIG_DATABASE} from "./config/database.config";
 
 @Module({
     imports: [
@@ -15,7 +15,6 @@ import databaseConfig, {CONFIG_DATABASE} from "./users/config/database.config";
         }),
         MongooseModule.forRootAsync({
             imports: [ConfigModule],
-            connectionName: 'users',
             useFactory: async (configService: ConfigService) => {
                 return {
                     uri: configService.get(CONFIG_DATABASE).users.uri,

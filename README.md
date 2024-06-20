@@ -8,21 +8,23 @@ This guide provides a simple overview of setting up a NestJS appliuserion with M
 The following sections provide an overview of the structure and the setup for MongoDB integration.
 
 ```bash
-mongoose/
-│
-└── src/
-    ├── users/
-    │   ├── dto/
-    │   │   └── create-user.dto.ts
-    │   ├── schemas/
-    │   │   └── user.schema.ts
-    │   ├── users.controller.spec.ts
-    │   ├── users.controller.ts
-    │   ├── users.module.ts
-    │   ├── users.service.spec.ts
-    │   └── users.service.ts
-    ├── app.module.ts
-    └── main.ts
+.
+├── app.controller.ts
+├── app.module.ts
+├── app.service.ts
+├── config
+│      └── database.config.ts
+├── main.ts
+└── users
+    ├── dto
+    │     └── create-user.dto.ts
+    ├── schemas
+    │      └── user.schema.ts
+    ├── user.module.ts
+    ├── users.controller.ts
+    └── users.service.ts
+
+
 ```
 ### Flow of interactions
 
@@ -66,6 +68,9 @@ sequenceDiagram
 
 ```
 
+```mermaid
+
+```
 
 ### Mongoose Module
 
@@ -176,11 +181,14 @@ import { UsersService } from './users.service';
 import { User, UserSchema } from './schemas/user.schema';
 
 @Module({
-  imports: [MongooseModule.forFeature([{ name: User.name, schema: UserSchema }])],
+  imports: [
+    MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
+  ],
   controllers: [UsersController],
   providers: [UsersService],
 })
 export class UsersModule {}
+
 ```
 
 ## User Controller
@@ -205,17 +213,8 @@ export class UsersController {
   async findAll(): Promise<User[]> {
     return this.usersService.findAll();
   }
-
-  @Get(':id')
-  async findOne(@Param('id') id: string): Promise<User> {
-    return this.usersService.findOne(id);
-  }
-
-  @Delete(':id')
-  async delete(@Param('id') id: string) {
-    return this.usersService.delete(id);
-  }
 }
+
 ```
 ## User Service
 The Users service handles the business logic related to users, including creating and retrieving user records from the MongoDB database.
@@ -240,6 +239,7 @@ export class UsersService {
     return this.userModel.find().exec();
   }
 }
+
 ```
 
 ## User Schema
@@ -262,6 +262,7 @@ export class User {
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
+
 ```
 
 
@@ -273,6 +274,7 @@ export class CreateUserDto {
   readonly name: string;
   readonly age: number;
 }
+
 ```
 
 ### Relations between User Module Components
@@ -312,5 +314,22 @@ sequenceDiagram
     deactivate UserService
     UsersController->>Client: Returns UserDocument[]
     deactivate UsersController
+```
+
+## TEST
+
+```bash
+### Create User
+POST http://localhost:3000/users
+Content-Type: application/json
+
+{
+  "name": "John Doe",
+  "age": 30
+}
+
+### Get All Users
+GET http://localhost:3000/users
+
 ```
 
