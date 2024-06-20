@@ -71,6 +71,47 @@ sequenceDiagram
 ```mermaid
 
 ```
+### App Module
+
+```typescript
+import { Module } from '@nestjs/common';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
+import { MongooseModule } from '@nestjs/mongoose';
+import { UsersModule } from './users/user.module';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import databaseConfig, { CONFIG_DATABASE } from './config/database.config';
+
+@Module({
+  imports: [
+    ConfigModule.forRoot({
+      load: [databaseConfig],
+      envFilePath: '.env',
+      isGlobal: true,
+    }),
+    MongooseModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: async (configService: ConfigService) => {
+        return {
+          uri: configService.get(CONFIG_DATABASE).users.uri,
+        };
+      },
+      inject: [ConfigService],
+    }),
+    UsersModule,
+  ],
+  controllers: [AppController],
+  providers: [AppService],
+})
+export class AppModule {}
+
+```
+
+The `AppModule` is the root module of your NestJS application. It imports and configures several modules:
+
+- `ConfigModule`: Loads configuration from .env and is globally available.
+- `MongooseModule`: Asynchronously sets up the MongoDB connection using configuration from ConfigModule.
+- `UsersModule`: Manages user-related functionality
 
 ### Mongoose Module
 
@@ -102,6 +143,7 @@ flowchart LR
   Defining the connection name if you have multiple databases.
 - **Location**: Typically placed in your root AppModule to ensure that the connection is available to the entire appliuserion.
 - **Usage**: Called only once per connection.
+- **Dynamic Configuration**: `forRootAsync` allows for the MongoDB connection to be configured dynamically at runtime, which is especially useful when the connection URI or other options depend on external sources like environment variables or a configuration service.
 #### MongooseModule.forFeature:
 
 - **Purpose**: Registers Mongoose schemas and creates models for specific feature modules. It does the following:
