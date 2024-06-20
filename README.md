@@ -96,19 +96,19 @@ flowchart LR
 
 #### MongooseModule.forRoot:
 
-- Purpose: Establishes a connection to your MongoDB database(s). It's responsible for:
+- **Purpose**: Establishes a connection to your MongoDB database(s). It's responsible for:
   Specifying the connection URI (uniform resource identifier) of your MongoDB database.
   Setting up global Mongoose options (e.g., connection pool size, retry settings).
   Defining the connection name if you have multiple databases.
-- Louserion: Typically placed in your root AppModule to ensure that the connection is available to the entire appliuserion.
-- Usage: Called only once per connection.
+- **Location**: Typically placed in your root AppModule to ensure that the connection is available to the entire appliuserion.
+- **Usage**: Called only once per connection.
 #### MongooseModule.forFeature:
 
-- Purpose: Registers Mongoose schemas and creates models for specific feature modules. It does the following:
+- **Purpose**: Registers Mongoose schemas and creates models for specific feature modules. It does the following:
   Associates a schema with a model name.
   Provides the connection name where the model should be registered.
-- Louserion: Used within feature modules (e.g., InsightModule, PatientModule, HealthModule) to define the models specific to that module.
-- Usage: Called once per feature module, for each model you need to work with.
+- **Location**: Used within feature modules (e.g., InsightModule, PatientModule, HealthModule) to define the models specific to that module.
+- **Usage**: Called once per feature module, for each model you need to work with.
 
 #### In summary:
 
