@@ -1,6 +1,43 @@
 # NestJS MongoDB
 
-This guide provides a simple overview of setting up a NestJS appliuserion with MongoDB using the Mongoose module. It includes creating modules, services, schemas, and integrating Mongoose for database operations, illustrated with diagrams for clarity.
+This guide provides a simple overview of setting up a NestJS application with MongoDB using the Mongoose module. It includes creating modules, services, schemas, and integrating Mongoose for database operations, illustrated with diagrams for clarity.
+
+Full article can be found [https://kelvinbz.medium.com/exploring-a-nestjs-application-with-mongodb-using-mongoose-a-beginners-guide-5f7e357f97bd](https://kelvinbz.medium.com/exploring-a-nestjs-application-with-mongodb-using-mongoose-a-beginners-guide-5f7e357f97bd)
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant UsersController
+    participant UserService
+    participant UserModel
+
+    Client->>UsersController: create(createUserDto)
+    activate UsersController
+    UsersController->>UserService: create(createUserDto)
+    activate UserService
+    UserService->>UserModel: new this.userModel(createUserDto);
+    activate UserModel
+    UserModel->>UserService: Returns saved UserDocument
+    deactivate UserModel
+    UserService->>UsersController: Returns created UserDocument
+    deactivate UserService
+    UsersController->>Client: Returns created UserDocument
+    deactivate UsersController
+
+    Client->>UsersController: findAll()
+    activate UsersController
+    UsersController->>UserService: findAll()
+    activate UserService
+    UserService->>UserModel: find().exec()
+    activate UserModel
+    UserModel->>UserService: Returns UserDocument[]
+    deactivate UserModel
+    UserService->>UsersController: Returns UserDocument[]
+    deactivate UserService
+    UsersController->>Client: Returns UserDocument[]
+    deactivate UsersController
+```
+
 
 ## Overview
 
@@ -26,6 +63,57 @@ The following sections provide an overview of the structure and the setup for Mo
 
 
 ```
+
+```mermaid
+graph LR
+    A[Users Directory]
+    A --> B[dto]
+    B --> C[create-user.dto.ts: Defines the DTO for creating a user]
+
+    A --> D[schemas]
+    D --> E[user.schema.ts: Defines the Mongoose schema for the User model]
+
+    A --> F[user.module.ts]
+    F --> G[Imports MongooseModule.forFeature]
+    F --> H[Organizes users' related components]
+
+    A --> I[users.controller.ts: Handles incoming HTTP requests]
+    I --> J[Uses UsersService to perform operations]
+
+    A --> K[users.service.ts: Contains business logic for user operations]
+    K --> L[Interacts with UserModel for database operations]
+
+    classDef dto fill:#f9f,stroke:#333,stroke-width:2px;
+    classDef schemas fill:#ff9,stroke:#333,stroke-width:2px;
+    classDef module fill:#9f9,stroke:#333,stroke-width:2px;
+    classDef controller fill:#9ff,stroke:#333,stroke-width:2px;
+    classDef service fill:#f99,stroke:#333,stroke-width:2px;
+
+    class B dto;
+    class D schemas;
+    class F module;
+    class I controller;
+    class K service;
+
+    X[Config Directory]
+    X --> Y[config/database.config.ts: Configuration file for database settings]
+
+    Z[AppModule]
+    Z --> AA[ConfigModule: Loads configuration from .env]
+    Z --> AB[MongooseModule: Sets up MongoDB connection]
+    Z --> AC[UsersModule: Manages user-related functionality]
+
+    classDef config fill:#99f,stroke:#333,stroke-width:2px;
+    classDef appmodule fill:#f99,stroke:#333,stroke-width:2px;
+
+    class X config;
+    class Z appmodule;
+
+    Z --> A
+    Z --> X
+
+```
+
 ### Flow of interactions
 
 Flow of interactions between the various components of the Users module and the MongoDB database using Mongoose
@@ -69,9 +157,67 @@ sequenceDiagram
 ```
 
 ```mermaid
+graph TD
+    Z[AppModule]
+    Z --"Imports"--> A[UsersModule]
+    Z --"Loads"--> B[ConfigModule]
+    Z --"Sets up connection"--> C[MongooseModule]
+
+    C --"Uses"--> G[ConfigService]
+
+    A --"Contains"--> D[UsersController]
+    A --"Contains"--> E[UsersService]
+    A --"Defines"--> F[UserModel]
+
+    D --"Depends on"--> E
+    E --"Depends on"--> F
+
+    classDef module fill:#9f9,stroke:#333,stroke-width:2px;
+    classDef controller fill:#9ff,stroke:#333,stroke-width:2px;
+    classDef service fill:#f99,stroke:#333,stroke-width:2px;
+    classDef model fill:#ff9,stroke:#333,stroke-width:2px;
+    classDef config fill:#99f,stroke:#333,stroke-width:2px;
+
+    class Z module;
+    class A module;
+    class B config;
+    class C module;
+    class D controller;
+    class E service;
+    class F model;
+    class G config;
 
 ```
 ### App Module
+
+```mermaid
+graph TD
+  AppModule[AppModule]
+  AppModule --"Imports"--> UsersModule[UsersModule]
+AppModule --"Loads"--> ConfigModule[ConfigModule]
+AppModule --"Sets up connection"--> MongooseModule[MongooseModule]
+
+MongooseModule --"Uses"--> ConfigService[ConfigService]
+MongooseModule --"forRootAsync"--> ConfigService
+
+
+
+classDef module fill:#9f9,stroke:#333,stroke-width:2px;
+classDef controller fill:#9ff,stroke:#333,stroke-width:2px;
+classDef service fill:#f99,stroke:#333,stroke-width:2px;
+classDef model fill:#ff9,stroke:#333,stroke-width:2px;
+classDef config fill:#99f,stroke:#333,stroke-width:2px;
+
+class AppModule module;
+class UsersModule module;
+class ConfigModule config;
+class MongooseModule module;
+class UsersController controller;
+class UsersService service;
+class UserModel model;
+class ConfigService config;
+
+```
 
 ```typescript
 import { Module } from '@nestjs/common';
@@ -118,20 +264,37 @@ The `AppModule` is the root module of your NestJS application. It imports and co
 **Dynamic modules** in NestJS provide an API for importing one module into another with customizable properties and behavior. Unlike static modules, dynamic modules allow you to pass configuration options at runtime, enabling the consuming module to influence how the imported module is set up. This flexibility is particularly useful for modules that require different configurations in different contexts, such as configuration modules that need to adapt to various environments (development, staging, production).
 
 ```mermaid
-flowchart LR
+graph LR
   NestJS_Modules[Modules]
-  
+
   NestJS_Modules --> Configuration[Configuration]
   Configuration --> Static_Config[Static Module: Fixed configuration]
   Configuration --> Dynamic_Config[Dynamic Module: Configurable at runtime]
-  
+
   NestJS_Modules --> Import_Method[Import Method]
   Import_Method --> Static_Import[Static Module: Imported directly]
   Import_Method --> Dynamic_Import["Dynamic Module: Uses static method \n(e.g., register(), forRoot(), forFeature())"]
-  
+
   NestJS_Modules --> Customization[Customization]
   Customization --> Static_Customization[Static Module: No customization]
   Customization --> Dynamic_Customization[Dynamic Module: Accepts options object]
+
+  classDef default fill:#f3f4f6,stroke:#333,stroke-width:2px;
+  classDef config fill:#ffcccc,stroke:#333,stroke-width:2px;
+  classDef import fill:#ccffcc,stroke:#333,stroke-width:2px;
+  classDef customization fill:#ccccff,stroke:#333,stroke-width:2px;
+  classDef static fill:#ffffcc,stroke:#333,stroke-width:2px;
+  classDef dynamic fill:#cceeff,stroke:#333,stroke-width:2px;
+
+  class Configuration config;
+  class Static_Config static;
+  class Dynamic_Config dynamic;
+  class Import_Method import;
+  class Static_Import static;
+  class Dynamic_Import dynamic;
+  class Customization customization;
+  class Static_Customization static;
+  class Dynamic_Customization dynamic;
 
 ```
 
@@ -141,7 +304,7 @@ flowchart LR
   Specifying the connection URI (uniform resource identifier) of your MongoDB database.
   Setting up global Mongoose options (e.g., connection pool size, retry settings).
   Defining the connection name if you have multiple databases.
-- **Location**: Typically placed in your root AppModule to ensure that the connection is available to the entire appliuserion.
+- **Location**: Typically placed in your root AppModule to ensure that the connection is available to the entire application.
 - **Usage**: Called only once per connection.
 - **Dynamic Configuration**: `forRootAsync` allows for the MongoDB connection to be configured dynamically at runtime, which is especially useful when the connection URI or other options depend on external sources like environment variables or a configuration service.
 #### MongooseModule.forFeature:
@@ -155,7 +318,7 @@ flowchart LR
 #### In summary:
 
 - `MongooseModule.forRoot` sets up the database connection infrastructure.
-- `MongooseModule.forFeature` defines the models you want to use within specific parts of your appliuserion (feature modules).
+- `MongooseModule.forFeature` defines the models you want to use within specific parts of your application (feature modules).
 ### Class Diagram
 
 This class diagram shows the relationships between the AppModule, UsersModule, and the related services, controllers, and schemas.
@@ -233,7 +396,56 @@ export class UsersModule {}
 
 ```
 
-## User Controller
+```mermaid
+graph TD
+    UsersModule[UsersModule]
+    
+    UsersModule --"Imports"--> MongooseModule[MongooseModule.forFeature]
+    MongooseModule --"Defines"--> UserSchema[UserSchema]
+    
+    UsersModule --"Contains"--> UsersController[UsersController]
+    UsersModule --"Provides"--> UsersService[UsersService]
+    
+    UsersController --"Uses"--> UsersService[UsersService]
+    UsersService --"Interacts with"--> UserSchema[UserSchema]
+
+    classDef module fill:#9f9,stroke:#333,stroke-width:2px;
+    classDef controller fill:#9ff,stroke:#333,stroke-width:2px;
+    classDef service fill:#f99,stroke:#333,stroke-width:2px;
+    classDef schema fill:#ff9,stroke:#333,stroke-width:2px;
+
+    class UsersModule module;
+    class MongooseModule module;
+    class UsersController controller;
+    class UsersService service;
+    class UserSchema schema;
+
+```
+
+## User Controller - User Service - User Schema
+```mermaid
+graph TD
+    UserController[User Controller]
+    UserService[User Service]
+    UserSchema[User Schema]
+    CreateUserDTO[Create User DTO]
+
+    UserController -- "Calls service methods" --> UserService
+    UserService -- "Interacts with schema" --> UserSchema
+    UserController -- "Uses DTO for data validation" --> CreateUserDTO
+    UserService -- "Receives validated data" --> CreateUserDTO
+
+    classDef controller fill:#9ff,stroke:#333,stroke-width:2px;
+    classDef service fill:#9f9,stroke:#333,stroke-width:2px;
+    classDef schema fill:#ff9,stroke:#333,stroke-width:2px;
+    classDef dto fill:#f99,stroke:#333,stroke-width:2px;
+
+    class UserController controller;
+    class UserService service;
+    class UserSchema schema;
+    class CreateUserDTO dto;
+
+```
 
 Users controller handles incoming requests related to users, such as creating, retrieving, and deleting user records.
 ```typescript
@@ -258,7 +470,6 @@ export class UsersController {
 }
 
 ```
-## User Service
 The Users service handles the business logic related to users, including creating and retrieving user records from the MongoDB database.
 
 ```typescript
@@ -284,9 +495,38 @@ export class UsersService {
 
 ```
 
-## User Schema
+
 
 The User schema defines the structure of the user documents stored in the MongoDB database.
+
+```mermaid
+graph TD
+    SchemaDecorator["@Schema Decorator"]
+    UserClass[User Class]
+    SchemaFactory["SchemaFactory.createForClass(User)"]
+    UserSchema[User Schema]
+    HydratedDocument[HydratedDocument<User>]
+    UserDocument[User Document]
+
+    SchemaDecorator -- "Marks User Class as a Mongoose schema" --> UserClass
+    UserClass -- "Defines user properties" --> SchemaFactory
+    SchemaFactory -- "Converts class to schema" --> UserSchema
+    UserSchema -- "Creates document type" --> HydratedDocument
+    HydratedDocument -- "Document with data and methods" --> UserDocument
+
+    classDef schema fill:#ff9,stroke:#333,stroke-width:2px;
+    classDef document fill:#9f9,stroke:#333,stroke-width:2px;
+    classDef property fill:#9ff,stroke:#333,stroke-width:2px;
+    classDef decorator fill:#ccf,stroke:#333,stroke-width:2px;
+    classDef factory fill:#fcf,stroke:#333,stroke-width:2px;
+
+    class UserSchema schema;
+    class SchemaDecorator decorator;
+    class SchemaFactory factory;
+    class UserDocument document;
+    class HydratedDocument document;
+
+```
 
 ```typescript
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
@@ -319,44 +559,6 @@ export class CreateUserDto {
 
 ```
 
-### Relations between User Module Components
-
-
-### Create And Find All Sequence Diagram
-
-```mermaid
-sequenceDiagram
-    participant Client
-    participant UsersController
-    participant UserService
-    participant UserModel
-
-    Client->>UsersController: create(createUserDto)
-    activate UsersController
-    UsersController->>UserService: create(createUserDto)
-    activate UserService
-    UserService->>UserModel: new this.userModel(createUserDto);
-    activate UserModel
-    UserModel->>UserService: Returns saved UserDocument
-    deactivate UserModel
-    UserService->>UsersController: Returns created UserDocument
-    deactivate UserService
-    UsersController->>Client: Returns created UserDocument
-    deactivate UsersController
-
-    Client->>UsersController: findAll()
-    activate UsersController
-    UsersController->>UserService: findAll()
-    activate UserService
-    UserService->>UserModel: find().exec()
-    activate UserModel
-    UserModel->>UserService: Returns UserDocument[]
-    deactivate UserModel
-    UserService->>UsersController: Returns UserDocument[]
-    deactivate UserService
-    UsersController->>Client: Returns UserDocument[]
-    deactivate UsersController
-```
 
 ## TEST
 
